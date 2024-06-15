@@ -765,6 +765,7 @@ int QInstallerTools::createBinary(BinaryCreatorArgs args, QString &argumentError
         return EXIT_FAILURE;
     }
     if (args.packagesDirectories.isEmpty() && args.repositoryDirectories.isEmpty()
+            && !args.onlineOnly
             && !args.compileResource
             && !args.createMaintenanceTool) {
         argumentError = QString::fromLatin1("Error: Both Package directory and Repository parameters missing.");
