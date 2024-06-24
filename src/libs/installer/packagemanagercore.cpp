@@ -843,8 +843,16 @@ int PackageManagerCore::downloadNeededArchives(double partProgressSize)
         foreach (const QString &versionFreeString, toDownload) {
             DownloadItem item;
             item.checkSha1CheckSum = checkSha1CheckSum;
+
+            QUrl url = component->repositoryUrl();
+            QFileInfo fileInfo(url.path());
+            if (!fileInfo.suffix().isEmpty())
+                url.setPath(fileInfo.path());
+            url.setPath(scThreeArgs.arg(url.path(), component->name(), versionFreeString));
+
             item.fileName = scInstallerPrefixWithTwoArgs.arg(component->name(), versionFreeString);
-            item.sourceUrl = scThreeArgs.arg(component->repositoryUrl().toString(), component->name(), versionFreeString);
+            item.sourceUrl = url.toString();
+
             archivesToDownload.push_back(item);
         }
         archivesToDownloadTotalSize += component->value(scCompressedSize).toULongLong();
