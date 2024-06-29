@@ -246,6 +246,14 @@ private slots:
         emit m_core->metaJobTotalProgress(total);
     }
 
+    void aboutToDownloadUpdatesXml(const QVariantMap &files) {
+        emit m_core->aboutToDownloadUpdatesXml(files);
+    }
+
+    void updatesXmlDownloaded() {
+        emit m_core->updatesXmlDownloaded();
+    }
+
     void handleMethodInvocationRequest(const QString &invokableMethodName);
     void addPathForDeletion(const QString &path);
 

@@ -76,6 +76,10 @@ public:
     bool clearCache();
     bool isValidCache() const;
 
+signals:
+    void aboutToDownloadUpdatesXml(const QVariantMap &files);
+    void updatesXmlDownloaded();
+
 private slots:
     void doStart() override;
     void doCancel() override;

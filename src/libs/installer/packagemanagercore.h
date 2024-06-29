@@ -428,6 +428,9 @@ Q_SIGNALS:
     void metaJobTotalProgress(int progress);
     void metaJobInfoMessage(const QString &message);
 
+    void aboutToDownloadUpdatesXml(const QVariantMap &files);
+    void updatesXmlDownloaded();
+
     void startAllComponentsReset();
     void finishAllComponentsReset(const QList<QInstaller::Component*> &rootComponents);
 

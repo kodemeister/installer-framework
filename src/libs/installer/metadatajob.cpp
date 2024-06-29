@@ -312,6 +312,12 @@ void MetadataJob::doStart()
                 double taskCount = m_updatesXmlItems.length()/static_cast<double>(m_downloadableChunkSize);
                 m_totalTaskCount = qCeil(taskCount);
                 m_taskNumber = 0;
+
+                QVariantMap files;
+                foreach (const FileTaskItem &item, m_updatesXmlItems)
+                    files.insert(item.source(), item.target());
+                emit aboutToDownloadUpdatesXml(files);
+
                 startXMLTask();
             } else {
                 emitFinished();
@@ -500,6 +506,7 @@ void MetadataJob::xmlTaskFinished()
         m_xmlTask.waitForFinished();
         m_updatesXmlResult.append(m_xmlTask.future().results());
         if (!startXMLTask()) {
+            emit updatesXmlDownloaded();
             status = parseUpdatesXml(m_updatesXmlResult);
             m_updatesXmlResult.clear();
         } else {

@@ -244,6 +244,33 @@ using namespace QInstaller;
 */
 
 /*!
+    \fn QInstaller::PackageManagerCore::aboutToDownloadUpdatesXml(const QVariantMap &files)
+
+    Triggered when the installer is about to download \c Updates.xml files from remote repositories.
+    The \a files object maps URLs of downloaded files to their save locations.
+
+    This signal is useful for supporting custom metadata formats. In the signal handler you can
+    generate your own \c Updates.xml files and save them to respective locations. The installer will
+    not download these auto-generated files.
+
+    \sa {installer::aboutToDownloadUpdatesXml}{installer.aboutToDownloadUpdatesXml}
+    \sa updatesXmlDownloaded()
+*/
+
+/*!
+    \fn QInstaller::PackageManagerCore::updatesXmlDownloaded()
+
+    Triggered when all \c Updates.xml files have been downloaded from remote repositories.
+
+    This signal is useful for supporting custom metadata formats. In the signal handler you can
+    convert the downloaded files from any custom format to the native XML format expected by the
+    installer.
+
+    \sa {installer::updatesXmlDownloaded}{installer.updatesXmlDownloaded}
+    \sa aboutToDownloadUpdatesXml()
+*/
+
+/*!
     \fn QInstaller::PackageManagerCore::startAllComponentsReset()
 
     \sa {installer::startAllComponentsReset}{installer.startAllComponentsReset}
