@@ -111,11 +111,38 @@ void Downloader::doDownload()
     m_timer.start(1000); // Use a timer to check for canceled downloads.
 
     foreach (const FileTaskItem &item, m_items) {
+        QFile file(item.target());
+        if (file.exists()) {
+            if (!file.open(QIODevice::ReadOnly)) {
+                m_futureInterface->reportException(
+                            TaskException(tr("Cannot open file \"%1\" for reading: %2").arg(
+                                              QDir::toNativeSeparators(file.fileName()),
+                                              file.errorString())));
+                break;
+            }
+
+            QCryptographicHash hash(QCryptographicHash::Sha1);
+            hash.addData(&file);
+            const QByteArray actualCheckSum = hash.result();
+
+            const QByteArray expectedCheckSum = item.value(TaskRole::Checksum).toByteArray();
+            bool checksumMismatch = false;
+            if (!expectedCheckSum.isEmpty()) {
+                if (expectedCheckSum != actualCheckSum.toHex())
+                    checksumMismatch = true;
+            }
+            m_futureInterface->reportResult(FileTaskResult(file.fileName(), actualCheckSum, item,
+                                                           checksumMismatch));
+
+            m_finished++;
+            continue;
+        }
+
         if (!startDownload(item))
             break;
     }
 
-    if (m_items.isEmpty() || m_futureInterface->isCanceled()) {
+    if (m_downloads.empty() || m_futureInterface->isCanceled()) {
         m_futureInterface->reportFinished();
         emit finished();    // emit finished, so the event loop can shutdown
     }
