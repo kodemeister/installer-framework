@@ -259,15 +259,22 @@ void MetadataJob::doStart()
                     if (repo.isCompressed())
                         continue;
 
-                    QString url;
-                    url = repo.url().toString() + updateFilePath;
+                    QUrl url = repo.url();
+                    QFileInfo fileInfo(url.path());
+                    if (fileInfo.suffix().isEmpty())
+                        url.setPath(QString::fromLatin1("%1/%2").arg(url.path(), scUpdatesXML));
+
+                    QString query;
+                    if (!url.query().isEmpty())
+                        query += url.query() + QLatin1Char('&');
                     if (!m_core->value(scUrlQueryString).isEmpty())
-                        url += m_core->value(scUrlQueryString) + QLatin1Char('&');
+                        query += m_core->value(scUrlQueryString) + QLatin1Char('&');
                     // also append a random string to avoid proxy caches
-                    url.append(randomQueryString);
+                    query += randomQueryString;
+                    url.setQuery(query);
 
                     // Check if we can skip downloading already cached repositories
-                    const Status foundStatus = findCachedUpdatesFile(repo, url);
+                    const Status foundStatus = findCachedUpdatesFile(repo, url.toString());
                     if (foundStatus == XmlDownloadSuccess) {
                         // Found existing Updates.xml
                         ++cachedCount;
@@ -285,7 +292,7 @@ void MetadataJob::doStart()
                     }
                     tmp.setAutoRemove(false);
                     m_tempDirDeleter.add(tmp.path());
-                    FileTaskItem item(url, tmp.path() + QLatin1String("/Updates.xml"));
+                    FileTaskItem item(url.toString(), tmp.path() + QLatin1String("/Updates.xml"));
                     item.insert(TaskRole::UserRole, QVariant::fromValue(repo));
                     item.insert(TaskRole::Authenticator, QVariant::fromValue(authenticator));
                     m_updatesXmlItems.append(item);
@@ -861,9 +868,14 @@ MetadataJob::Status MetadataJob::parseUpdatesXml(const QList<FileTaskResult> &re
         QDomElement metadataNameElement = root.firstChildElement(scMetadataName);
         QDomNodeList children = root.childNodes();
         if (!sha1.isNull() && !metadataNameElement.isNull()) {
-            const QString repoUrl = metadata->repository().url().toString();
+            QUrl url = metadata->repository().url();
+            QFileInfo fileInfo(url.path());
+            if (!fileInfo.suffix().isEmpty())
+                url.setPath(fileInfo.path());
             const QString metadataName = metadataNameElement.toElement().text();
-            addFileTaskItem(QString::fromLatin1("%1/%2").arg(repoUrl, metadataName),
+            url.setPath(QString::fromLatin1("%1/%2").arg(url.path(), metadataName));
+
+            addFileTaskItem(url.toString(),
                 metadata->path() + QString::fromLatin1("/%1").arg(metadataName),
                 metadata.get(), sha1.toElement().text(), QString());
         } else {
@@ -878,8 +890,13 @@ MetadataJob::Status MetadataJob::parseUpdatesXml(const QList<FileTaskResult> &re
 
                     // If meta element (script, licenses, etc.) is not found, no need to fetch metadata.
                     if (metaFound) {
-                        const QString repoUrl = metadata->repository().url().toString();
-                        addFileTaskItem(QString::fromLatin1("%1/%2/%3meta.7z").arg(repoUrl, packageName, packageVersion),
+                        QUrl url = metadata->repository().url();
+                        QFileInfo fileInfo(url.path());
+                        if (!fileInfo.suffix().isEmpty())
+                            url.setPath(fileInfo.path());
+                        url.setPath(QString::fromLatin1("%1/%2/%3meta.7z").arg(url.path(), packageName, packageVersion));
+
+                        addFileTaskItem(url.toString(),
                             metadata->path() + QString::fromLatin1("/%1-%2-meta.7z").arg(packageName, packageVersion),
                             metadata.get(), packageHash, packageName);
                     } else {
