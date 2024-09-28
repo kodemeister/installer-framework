@@ -72,6 +72,7 @@
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QRegularExpression>
+#include <QUrlQuery>
 #include <QtConcurrentFilter>
 
 #include "sysinfo.h"
@@ -868,19 +869,44 @@ int PackageManagerCore::downloadNeededArchives(double partProgressSize)
     foreach (Component *component, neededComponents) {
         // collect all archives to be downloaded
         const QStringList toDownload = component->downloadableArchives();
-        bool checkSha1CheckSum = (component->value(scCheckSha1CheckSum).toLower() == scTrue);
+        bool verifyCheckSum = (component->value(scCheckSha1CheckSum).toLower() == scTrue);
+        QString version = component->value(scVersion);
         foreach (const QString &archiveNameWithVersion, toDownload) {
             DownloadItem item;
-            item.checkSha1CheckSum = checkSha1CheckSum;
+            item.verifyCheckSum = verifyCheckSum;
 
-            QUrl url = component->repositoryUrl();
-            QFileInfo fileInfo(url.path());
-            if (!fileInfo.suffix().isEmpty())
-                url.setPath(fileInfo.path());
-            url.setPath(scThreeArgs.arg(url.path(), component->name(), archiveNameWithVersion));
+            QUrl archiveUrl(archiveNameWithVersion.mid(version.size()));
 
-            item.fileName = scInstallerPrefixWithTwoArgs.arg(component->name(), archiveNameWithVersion);
-            item.sourceUrl = url.toString();
+            if (archiveUrl.hasQuery()) {
+                static const QMap<QString, QCryptographicHash::Algorithm> supportedCheckSums = {
+                    { QLatin1String("sha1"), QCryptographicHash::Sha1 },
+                    { QLatin1String("sha256"), QCryptographicHash::Sha256 }
+                };
+
+                QUrlQuery query(archiveUrl);
+                for (const auto &[key, value] : query.queryItems()) {
+                    if (supportedCheckSums.contains(key)) {
+                        item.checkSumAlgorithm = supportedCheckSums[key];
+                        item.checkSum = value.toLatin1();
+                        query.removeQueryItem(key);
+                    }
+                }
+                archiveUrl.setQuery(query);
+            }
+
+            if (archiveUrl.isRelative()) {
+                QUrl url = component->repositoryUrl();
+                QFileInfo fileInfo(url.path());
+                if (!fileInfo.suffix().isEmpty())
+                    url.setPath(fileInfo.path());
+                url.setPath(scThreeArgs.arg(url.path(), component->name(), version + archiveUrl.fileName()));
+
+                item.fileName = scInstallerPrefixWithTwoArgs.arg(component->name(), version + archiveUrl.fileName());
+                item.sourceUrl = url.toString();
+            } else {
+                item.fileName = scInstallerPrefixWithTwoArgs.arg(component->name(), version + archiveUrl.fileName());
+                item.sourceUrl = archiveUrl.toString();
+            }
 
             archivesToDownload.push_back(item);
         }

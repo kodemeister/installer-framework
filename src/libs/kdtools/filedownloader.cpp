@@ -191,7 +191,7 @@ struct KDUpdater::FileDownloader::Private
 {
     Private()
         : m_hash(QCryptographicHash::Sha1)
-        , m_assumedSha1Sum("")
+        , m_assumedCheckSum("")
         , autoRemove(true)
         , followRedirect(false)
         , m_speedTimerInterval(100)
@@ -220,7 +220,7 @@ struct KDUpdater::FileDownloader::Private
     QString scheme;
 
     QCryptographicHash m_hash;
-    QByteArray m_assumedSha1Sum;
+    QByteArray m_assumedCheckSum;
 
     QString errorString;
     bool autoRemove;
@@ -277,28 +277,33 @@ QUrl KDUpdater::FileDownloader::url() const
     return d->url;
 }
 
+void KDUpdater::FileDownloader::setCheckSumAlgorithm(QCryptographicHash::Algorithm algorithm)
+{
+    d->m_hash = QCryptographicHash(algorithm);
+}
+
 /*!
-    Returns the SHA-1 checksum of the downloaded file.
+    Returns the checksum of the downloaded file.
 */
-QByteArray KDUpdater::FileDownloader::sha1Sum() const
+QByteArray KDUpdater::FileDownloader::checkSum() const
 {
     return d->m_hash.result();
 }
 
 /*!
-    Returns the assumed SHA-1 checksum of the file to download.
+    Returns the assumed checksum of the file to download.
 */
-QByteArray KDUpdater::FileDownloader::assumedSha1Sum() const
+QByteArray KDUpdater::FileDownloader::assumedCheckSum() const
 {
-    return d->m_assumedSha1Sum;
+    return d->m_assumedCheckSum;
 }
 
 /*!
-    Sets the assumed SHA-1 checksum of the file to download to \a sum.
+    Sets the assumed checksum of the file to download to \a checkSum.
 */
-void KDUpdater::FileDownloader::setAssumedSha1Sum(const QByteArray &sum)
+void KDUpdater::FileDownloader::setAssumedCheckSum(const QByteArray &checkSum)
 {
-    d->m_assumedSha1Sum = sum;
+    d->m_assumedCheckSum = checkSum;
 }
 
 /*!
@@ -323,15 +328,15 @@ void FileDownloader::setDownloadAborted(const QString &error)
 /*!
     Sets the download status to \c completed and displays a status message.
 
-    If an assumed SHA-1 checksum is set and the actual calculated checksum does not match it, sets
-    the status to \c error. If no SHA-1 is assumed, no check is performed, and status is set to
+    If an assumed checksum is set and the actual calculated checksum does not match it, sets
+    the status to \c error. If no checksum is assumed, no check is performed, and status is set to
     \c success.
 
     Emits the downloadCompleted() and downloadStatus() signals on success.
 */
 void KDUpdater::FileDownloader::setDownloadCompleted()
 {
-    if (d->m_assumedSha1Sum.isEmpty() || (d->m_assumedSha1Sum == sha1Sum())) {
+    if (d->m_assumedCheckSum.isEmpty() || (d->m_assumedCheckSum == checkSum())) {
         onSuccess();
         emit downloadCompleted();
         emit downloadStatus(tr("Download finished."));
@@ -658,7 +663,7 @@ void KDUpdater::FileDownloader::addCheckSumData(const QByteArray &data)
 }
 
 /*!
-    Resets SHA-1 checksum data of the downloaded file.
+    Resets the checksum data of the downloaded file.
 */
 void KDUpdater::FileDownloader::resetCheckSumData()
 {

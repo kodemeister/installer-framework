@@ -115,7 +115,9 @@ public:
     {
         QString fileName;
         QString sourceUrl;
-        bool checkSha1CheckSum;
+        bool verifyCheckSum = true;
+        QCryptographicHash::Algorithm checkSumAlgorithm = QCryptographicHash::Sha1;
+        QByteArray checkSum;
     };
 
     Q_DECLARE_FLAGS(ComponentTypes, ComponentType)

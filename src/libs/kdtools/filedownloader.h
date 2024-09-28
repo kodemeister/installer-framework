@@ -32,6 +32,7 @@
 
 #include "kdtoolsglobal.h"
 
+#include <QtCore/QCryptographicHash>
 #include <QtCore/QObject>
 #include <QtCore/QUrl>
 
@@ -55,12 +56,12 @@ public:
     QUrl url() const;
     void setUrl(const QUrl &url);
 
-    QByteArray sha1Sum() const;
+    void setCheckSumAlgorithm(QCryptographicHash::Algorithm algorithm);
 
-    QByteArray assumedSha1Sum() const;
-    void setAssumedSha1Sum(const QByteArray &sha1);
-    void setCheckSha1Sum(const bool checkSha1Sum);
-    bool checkSha1Sum() const;
+    QByteArray checkSum() const;
+
+    QByteArray assumedCheckSum() const;
+    void setAssumedCheckSum(const QByteArray &checkSum);
 
     QString scheme() const;
     void setScheme(const QString &scheme);
