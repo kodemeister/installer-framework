@@ -1090,6 +1090,28 @@ QString PackageManagerCore::readFile(const QString &filePath, const QString &cod
 }
 
 /*!
+    Writes the contents of \a data to the file \a filePath using the encoding specified
+    by \a codecName. The file is written in the text mode, that is, end-of-line
+    terminators are translated to the local encoding.
+
+    Returns \c true if the file has been successfully written; otherwise returns \c false.
+
+    \sa {installer::writeFile}{installer.writeFile}
+*/
+bool PackageManagerCore::writeFile(const QString &filePath, const QString &data, const QString &codecName) const
+{
+    QFile f(filePath);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+
+    QTextCodec *codec = QTextCodec::codecForName(qPrintable(codecName));
+    if (!codec)
+        return false;
+
+    return f.write(codec->fromUnicode(data)) != -1;
+}
+
+/*!
  * Prints \a title to console and reads console input. Function will halt the
  * installer and wait for user input. Returns a line which user has typed into
  * console. The maximum allowed line length is set to \a maxlen. If the stream
