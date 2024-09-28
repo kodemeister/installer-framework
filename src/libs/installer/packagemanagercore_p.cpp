@@ -804,6 +804,10 @@ void PackageManagerCorePrivate::initialize(const QHash<QString, QString> &params
     connect(&m_metadataJob, &Job::infoMessage, this, &PackageManagerCorePrivate::infoMessage);
     connect(&m_metadataJob, &Job::progress, this, &PackageManagerCorePrivate::infoProgress);
     connect(&m_metadataJob, &Job::totalProgress, this, &PackageManagerCorePrivate::totalProgress);
+    connect(&m_metadataJob, &MetadataJob::aboutToDownloadManifestFiles,
+            this, &PackageManagerCorePrivate::aboutToDownloadManifestFiles);
+    connect(&m_metadataJob, &MetadataJob::manifestFilesDownloaded,
+            this, &PackageManagerCorePrivate::manifestFilesDownloaded);
     KDUpdater::FileDownloaderFactory::instance().setProxyFactory(m_core->proxyFactory());
 }
 

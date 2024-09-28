@@ -246,6 +246,14 @@ private slots:
         emit m_core->metaJobTotalProgress(total);
     }
 
+    void aboutToDownloadManifestFiles(const QVariantMap &files) {
+        emit m_core->aboutToDownloadManifestFiles(files);
+    }
+
+    void manifestFilesDownloaded() {
+        emit m_core->manifestFilesDownloaded();
+    }
+
     void handleMethodInvocationRequest(const QString &invokableMethodName);
     void addPathForDeletion(const QString &path);
 
