@@ -53,7 +53,11 @@ public:
     QString errorString() const override;
 
     bool extract(const QString &dirPath) override;
-    bool extract(const QString &dirPath, const quint64 totalFiles) override;
+    bool extract(const QString &dirPath,
+                 const QString &include,
+                 const QString &search,
+                 const QString &replace,
+                 const quint64 totalFiles) override;
     bool create(const QStringList &data) override;
     QVector<ArchiveEntry> list() override;
     bool isSupported() override;

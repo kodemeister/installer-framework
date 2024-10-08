@@ -608,10 +608,16 @@ void RemoteServerConnection::handleArchive(RemoteServerReply *reply, const QStri
         reply->send(archive->errorString());
     } else if (command == QLatin1String(Protocol::AbstractArchiveExtract)) {
         QString dirPath;
+        QString include;
+        QString search;
+        QString replace;
         quint64 total;
         data >> dirPath;
+        data >> include;
+        data >> search;
+        data >> replace;
         data >> total;
-        archive->workerExtract(dirPath, total);
+        archive->workerExtract(dirPath, include, search, replace, total);
     } else if (command == QLatin1String(Protocol::AbstractArchiveCreate)) {
         QStringList entries;
         data >> entries;

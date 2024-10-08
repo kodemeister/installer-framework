@@ -62,7 +62,11 @@ public:
     Status status() const;
 
 public Q_SLOTS:
-    void extract(const QString &dirPath, const quint64 totalFiles);
+    void extract(const QString &dirPath,
+                 const QString &include,
+                 const QString &search,
+                 const QString &replace,
+                 const quint64 totalFiles);
     void addDataBlock(const QByteArray buffer);
     void onFilePositionChanged(qint64 pos);
     void cancel();
@@ -104,12 +108,20 @@ public:
     void setFilename(const QString &filename) override;
 
     bool extract(const QString &dirPath) override;
-    bool extract(const QString &dirPath, const quint64 totalFiles) override;
+    bool extract(const QString &dirPath,
+                 const QString &include,
+                 const QString &search,
+                 const QString &replace,
+                 const quint64 totalFiles) override;
     bool create(const QStringList &data) override;
     QVector<ArchiveEntry> list() override;
     bool isSupported() override;
 
-    void workerExtract(const QString &dirPath, const quint64 totalFiles);
+    void workerExtract(const QString &dirPath,
+                       const QString &include,
+                       const QString &search,
+                       const QString &replace,
+                       const quint64 totalFiles);
     void workerAddDataBlock(const QByteArray buffer);
     void workerSetDataAtEnd();
     void workerSetFilePosition(qint64 pos);
@@ -121,7 +133,11 @@ Q_SIGNALS:
     void seekRequested(qint64 offset, int whence);
     void workerFinished();
 
-    void workerAboutToExtract(const QString &dirPath, const quint64 totalFiles);
+    void workerAboutToExtract(const QString &dirPath,
+                              const QString &include,
+                              const QString &search,
+                              const QString &replace,
+                              const quint64 totalFiles);
     void workerAboutToAddDataBlock(const QByteArray buffer);
     void workerAboutToSetDataAtEnd();
     void workerAboutToSetFilePosition(qint64 pos);
@@ -152,7 +168,7 @@ private:
     static QString pathWithoutNamespace(const QString &path);
     static QString errorStringWithCode(archive *const archive);
 
-    quint64 totalFiles();
+    quint64 totalFiles(const QString &include);
 
 private:
     friend class ExtractWorker;

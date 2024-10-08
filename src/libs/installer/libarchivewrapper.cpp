@@ -130,16 +130,21 @@ bool LibArchiveWrapper::extract(const QString &dirPath)
 }
 
 /*!
-    Extracts the contents of this archive to \a dirPath with
-    precalculated count of \a totalFiles. Returns \c true
-    on success; \c false otherwise.
+    Extracts the contents of this archive to \a dirPath with precalculated count of \a totalFiles.
+    If regular expression \a include is not empty, only files that match \a include are extracted.
+    If regular expression \a search is not empty, all occurrences of \a search in file names are
+    replaced with string \a replace. Returns \c true on success; \c false otherwise.
 
     If the remote connection is active, the method is called by the server instead,
     with the client starting a new event loop waiting for the extraction to finish.
 */
-bool LibArchiveWrapper::extract(const QString &dirPath, const quint64 totalFiles)
+bool LibArchiveWrapper::extract(const QString &dirPath,
+                                const QString &include,
+                                const QString &search,
+                                const QString &replace,
+                                const quint64 totalFiles)
 {
-    return d->extract(dirPath, totalFiles);
+    return d->extract(dirPath, include, search, replace, totalFiles);
 }
 
 /*!

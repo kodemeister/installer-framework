@@ -98,11 +98,17 @@ namespace QInstaller {
 */
 
 /*!
-    \fn QInstaller::AbstractArchive::extract(const QString &dirPath, const quint64 totalFiles)
+    \fn QInstaller::AbstractArchive::extract(const QString &dirPath,
+                                             const QString &include,
+                                             const QString &search,
+                                             const QString &replace,
+                                             const quint64 totalFiles)
 
-    Extracts the contents of an archive to \a dirPath with precalculated
-    count of \a totalFiles. Returns \c true on success; \c false otherwise.
-    A subclass should implement this method.
+    Extracts the contents of an archive to \a dirPath with precalculated count of \a totalFiles.
+    If regular expression \a include is not empty, only files that match \a include are extracted.
+    If regular expression \a search is not empty, all occurrences of \a search in file names are
+    replaced with string \a replace. Returns \c true on success; \c false otherwise. A subclass
+    should implement this method.
 */
 
 /*!
