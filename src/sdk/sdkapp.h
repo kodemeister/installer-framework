@@ -163,6 +163,10 @@ public:
         if (QInstaller::LoggingHandler::instance().verboseLevel() == QInstaller::LoggingHandler::Detailed) {
             loggingRules += QLatin1String("\nifw.developer.build = true\n");
         }
+
+        // Disable annoying QML warnings 'Variable "foo" is used before its declaration'.
+        loggingRules += QLatin1String("\nqt.qml.usedbeforedeclared = false\n");
+
         QLoggingCategory::setFilterRules(loggingRules);
         qCDebug(QInstaller::lcInstallerInstallLog).noquote() << "Arguments:" <<
                 m_parser.arguments().join(QLatin1String(", "));
