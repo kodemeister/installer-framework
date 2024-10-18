@@ -76,6 +76,10 @@ public:
     bool clearCache();
     bool isValidCache() const;
 
+signals:
+    void aboutToDownloadManifestFiles(const QVariantMap &files);
+    void manifestFilesDownloaded();
+
 private slots:
     void doStart() override;
     void doCancel() override;

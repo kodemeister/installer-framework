@@ -244,6 +244,35 @@ using namespace QInstaller;
 */
 
 /*!
+    \fn QInstaller::PackageManagerCore::aboutToDownloadManifestFiles(const QVariantMap &files)
+
+    Triggered when the installer is about to download manifest files (e.g., \c Updates.xml) from
+    remote repositories. The \a files object maps URLs of manifest files to their save locations.
+
+    This signal is useful for supporting custom metadata formats. In the signal handler you can
+    inspect URLs of manifest files in any custom format, generate native \c Updates.xml files
+    expected by the installer, and save them to respective locations. In this case, the installer
+    will use auto-generated files without first downloading them.
+
+    \sa {installer::aboutToDownloadManifestFiles}{installer.aboutToDownloadManifestFiles}
+    \sa manifestFilesDownloaded()
+*/
+
+/*!
+    \fn QInstaller::PackageManagerCore::manifestFilesDownloaded()
+
+    Triggered when all manifest files (e.g., \c Updates.xml) have been downloaded from remote
+    repositories.
+
+    This signal is useful for supporting custom metadata formats. In the signal handler you can
+    convert the downloaded files from any custom format to native \c Updates.xml files expected by
+    the installer.
+
+    \sa {installer::manifestFilesDownloaded}{installer.manifestFilesDownloaded}
+    \sa aboutToDownloadManifestFiles()
+*/
+
+/*!
     \fn QInstaller::PackageManagerCore::startAllComponentsReset()
 
     \sa {installer::startAllComponentsReset}{installer.startAllComponentsReset}
