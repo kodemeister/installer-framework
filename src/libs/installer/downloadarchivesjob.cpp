@@ -374,10 +374,19 @@ KDUpdater::FileDownloader *DownloadArchivesJob::setupDownloader(const QString &s
     const QFileInfo fi = QFileInfo(m_archivesToDownload.first().fileName);
     const Component *const component = m_core->componentByName(PackageManagerCore::checkableName(QFileInfo(fi.path()).fileName()));
     if (component) {
-        QString fullQueryString;
-        if (!queryString.isEmpty())
-            fullQueryString = QLatin1String("?") + queryString;
-        const QUrl url(m_archivesToDownload.first().sourceUrl + suffix + fullQueryString);
+        QUrl url(m_archivesToDownload.first().sourceUrl);
+
+        if (!suffix.isEmpty())
+            url.setPath(url.path() + suffix);
+
+        if (!queryString.isEmpty()) {
+            QString query;
+            if (!url.query().isEmpty())
+                query += url.query() + QLatin1Char('&');
+            query += queryString;
+            url.setQuery(query);
+        }
+
         const QString &scheme = url.scheme();
         downloader = FileDownloaderFactory::instance().create(scheme, this);
 
