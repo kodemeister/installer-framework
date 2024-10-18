@@ -240,6 +240,7 @@ public:
     Q_INVOKABLE bool isFileExtensionRegistered(const QString &extension) const;
     Q_INVOKABLE bool fileExists(const QString &filePath) const;
     Q_INVOKABLE QString readFile(const QString &filePath, const QString &codecName) const;
+    Q_INVOKABLE bool writeFile(const QString &filePath, const QString &data, const QString &codecName) const;
     Q_INVOKABLE QString readConsoleLine(const QString &title = QString(), qint64 maxlen = 0) const;
 
     Q_INVOKABLE QString toNativeSeparators(const QString &path);

@@ -455,6 +455,16 @@
 */
 
 /*!
+    \qmlmethod boolean installer::writeFile(string filePath, string data, string codecName)
+
+    Writes the contents of \a data to the file \a filePath using the encoding specified
+    by \a codecName. The file is written in the text mode, that is, end-of-line
+    terminators are translated to the local encoding.
+
+    Returns \c true if the file has been successfully written; otherwise returns \c false.
+*/
+
+/*!
     \qmlmethod string installer::readConsoleLine(string title, int maxlen)
 
     Prints \a title to a console and reads console input. Function halts the
