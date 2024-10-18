@@ -120,7 +120,7 @@ void DownloadArchivesJob::fetchNextArchiveHash()
         return;
     }
 
-    if (m_archivesToDownload.first().checkSha1CheckSum) {
+    if (m_archivesToDownload.first().verifyCheckSum && m_archivesToDownload.first().checkSum.isEmpty()) {
         if (m_canceled) {
             finishWithError(tr("Canceled"));
             return;
@@ -140,6 +140,7 @@ void DownloadArchivesJob::fetchNextArchiveHash()
                 this, &DownloadArchivesJob::finishedHashDownload, Qt::QueuedConnection);
         m_downloader->download();
     } else {
+        m_currentHash = m_archivesToDownload.first().checkSum;
         QMetaObject::invokeMethod(this, "fetchNextArchive", Qt::QueuedConnection);
     }
 }
@@ -288,18 +289,18 @@ void DownloadArchivesJob::registerFile()
     if (m_canceled || m_archivesToDownload.isEmpty())
         return;
 
-    if (m_archivesToDownload.first().checkSha1CheckSum && m_currentHash != m_downloader->sha1Sum().toHex()) {
+    if (m_archivesToDownload.first().verifyCheckSum && m_currentHash != m_downloader->checkSum().toHex()) {
         //TODO: Maybe we should try to download the file again automatically
         const QMessageBox::Button res =
             MessageBoxHandler::critical(MessageBoxHandler::currentBestSuitParent(),
             QLatin1String("DownloadError"), tr("Download Error"), tr("Hash verification while "
             "downloading failed. This is a temporary error, please retry.\n\n"
-            "Expected: %1 \nDownloaded: %2").arg(QString::fromLatin1(m_currentHash), QString::fromLatin1(m_downloader->sha1Sum().toHex())),
+            "Expected: %1 \nDownloaded: %2").arg(QString::fromLatin1(m_currentHash), QString::fromLatin1(m_downloader->checkSum().toHex())),
             QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry);
 
         if (res == QMessageBox::Cancel) {
             finishWithError(tr("Cannot verify Hash\nExpected: %1 \nDownloaded: %2")
-                .arg(QString::fromLatin1(m_currentHash), QString::fromLatin1(m_downloader->sha1Sum().toHex())));
+                .arg(QString::fromLatin1(m_currentHash), QString::fromLatin1(m_downloader->checkSum().toHex())));
             return;
         }
         // When using command line instance, only retry a number of times to avoid
@@ -392,6 +393,7 @@ KDUpdater::FileDownloader *DownloadArchivesJob::setupDownloader(const QString &s
 
         if (downloader) {
             downloader->setUrl(url);
+            downloader->setCheckSumAlgorithm(m_archivesToDownload.first().checkSumAlgorithm);
             downloader->setAutoRemoveDownloadedFile(false);
 
             QAuthenticator auth;
@@ -410,7 +412,7 @@ KDUpdater::FileDownloader *DownloadArchivesJob::setupDownloader(const QString &s
             }
 
             emit outputTextChanged(tr("Downloading archive \"%1\" for component %2.")
-                .arg(fi.fileName() + suffix, component->displayName()));
+                .arg(url.fileName(), component->displayName()));
         } else {
             emit outputTextChanged(tr("Scheme %1 not supported (URL: %2).").arg(scheme, url.toString()));
         }
