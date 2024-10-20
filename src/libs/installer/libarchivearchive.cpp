@@ -258,10 +258,17 @@ ExtractWorker::Status ExtractWorker::status() const
     return m_status;
 }
 
-void ExtractWorker::extract(const QString &dirPath, const quint64 totalFiles)
+void ExtractWorker::extract(const QString &dirPath,
+                            const QString &include,
+                            const QString &search,
+                            const QString &replace,
+                            const quint64 totalFiles)
 {
     m_status = Unfinished;
     quint64 completed = 0;
+
+    QRegularExpression includeRegex(include);
+    QRegularExpression searchRegex(search);
 
     if (!totalFiles) {
         m_status = Failure;
@@ -309,7 +316,14 @@ void ExtractWorker::extract(const QString &dirPath, const quint64 totalFiles)
                     .arg(LibArchiveArchive::errorStringWithCode(reader.get())));
                 return;
             }
-            const QString current = ArchiveEntryPaths::callWithSystemLocale<QString>(ArchiveEntryPaths::pathname, entry);
+            QString current = ArchiveEntryPaths::callWithSystemLocale<QString>(ArchiveEntryPaths::pathname, entry);
+            if (!include.isEmpty() && !current.contains(includeRegex))
+                continue;
+            if (!search.isEmpty()) {
+                current.replace(searchRegex, replace);
+                if (current.isEmpty())
+                    continue;
+            }
             const QString outputPath = dirPath + QDir::separator() + current;
             ArchiveEntryPaths::callWithSystemLocale(&ArchiveEntryPaths::setPathname, entry, outputPath);
 
@@ -487,10 +501,16 @@ bool ExtractWorker::writeEntry(archive *reader, archive *writer, archive_entry *
 */
 
 /*!
-    \fn QInstaller::LibArchiveArchive::workerAboutToExtract(const QString &dirPath, const quint64 totalFiles)
+    \fn QInstaller::LibArchiveArchive::workerAboutToExtract(const QString &dirPath,
+                                                            const QString &include,
+                                                            const QString &search,
+                                                            const QString &replace,
+                                                            const quint64 totalFiles)
 
-    Emitted when the worker object is about to extract \a totalFiles
-    from an archive to \a dirPath.
+    Emitted when the worker object is about to extract \a totalFiles from an archive to \a dirPath.
+    If regular expression \a include is not empty, only files that match \a include are extracted.
+    If regular expression \a search is not empty, all occurrences of \a search in file names are
+    replaced with string \a replace.
 */
 
 /*!
@@ -596,20 +616,29 @@ void LibArchiveArchive::setFilename(const QString &filename)
 */
 bool LibArchiveArchive::extract(const QString &dirPath)
 {
-    return extract(dirPath, totalFiles());
+    return extract(dirPath, QString(), QString(), QString(), totalFiles(QString()));
 }
 
 /*!
     \reimp
 
-    Extracts the contents of this archive to \a dirPath with
-    precalculated count of \a totalFiles. Returns \c true on
-    success; \c false otherwise.
+    Extracts the contents of this archive to \a dirPath with precalculated count of \a totalFiles.
+    If regular expression \a include is not empty, only files that match \a include are extracted.
+    If regular expression \a search is not empty, all occurrences of \a search in file names are
+    replaced with string \a replace. Returns \c true on success; \c false otherwise.
 */
-bool LibArchiveArchive::extract(const QString &dirPath, const quint64 totalFiles)
+bool LibArchiveArchive::extract(const QString &dirPath,
+                                const QString &include,
+                                const QString &search,
+                                const QString &replace,
+                                const quint64 totalFiles)
 {
     m_cancelScheduled = false;
     quint64 completed = 0;
+
+    QRegularExpression includeRegex(include);
+    QRegularExpression searchRegex(search);
+
     if (!totalFiles) {
         setErrorString(QLatin1String("The file count for current archive is null!"));
         return false;
@@ -647,7 +676,14 @@ bool LibArchiveArchive::extract(const QString &dirPath, const quint64 totalFiles
                     .arg(errorStringWithCode(reader.get())));
             }
 
-            const QString current = ArchiveEntryPaths::callWithSystemLocale<QString>(ArchiveEntryPaths::pathname, entry);
+            QString current = ArchiveEntryPaths::callWithSystemLocale<QString>(ArchiveEntryPaths::pathname, entry);
+            if (!include.isEmpty() && !current.contains(includeRegex))
+                continue;
+            if (!search.isEmpty()) {
+                current.replace(searchRegex, replace);
+                if (current.isEmpty())
+                    continue;
+            }
             const QString outputPath = dirPath + QDir::separator() + current;
             ArchiveEntryPaths::callWithSystemLocale(ArchiveEntryPaths::setPathname, entry, outputPath);
 
@@ -876,12 +912,19 @@ bool LibArchiveArchive::isSupported()
 }
 
 /*!
-    Requests to extract the archive to \a dirPath with \a totalFiles
-    in a separate thread with a worker object.
+    Requests to extract the archive to \a dirPath with \a totalFiles in a separate thread with a
+    worker object.
+    If regular expression \a include is not empty, only files that match \a include are extracted.
+    If regular expression \a search is not empty, all occurrences of \a search in file names are
+    replaced with string \a replace.
 */
-void LibArchiveArchive::workerExtract(const QString &dirPath, const quint64 totalFiles)
+void LibArchiveArchive::workerExtract(const QString &dirPath,
+                                      const QString &include,
+                                      const QString &search,
+                                      const QString &replace,
+                                      const quint64 totalFiles)
 {
-    emit workerAboutToExtract(dirPath, totalFiles);
+    emit workerAboutToExtract(dirPath, include, search, replace, totalFiles);
 }
 
 /*!
@@ -1204,12 +1247,15 @@ QString LibArchiveArchive::errorStringWithCode(archive *const archive)
 
 /*!
     Returns the number of files in this archive.
+    If regular expression \a include is not empty, only files that match \a include are counted.
 */
-quint64 LibArchiveArchive::totalFiles()
+quint64 LibArchiveArchive::totalFiles(const QString &include)
 {
     QScopedPointer<archive, ScopedPointerReaderDeleter> reader(archive_read_new());
     archive_entry *entry = nullptr;
     quint64 files = 0;
+
+    QRegularExpression includeRegex(include);
 
     configureReader(reader.get());
 
@@ -1228,6 +1274,10 @@ quint64 LibArchiveArchive::totalFiles()
                 throw Error(tr("Cannot read entry header: %1")
                     .arg(errorStringWithCode(reader.get())));
             }
+
+            const QString current = ArchiveEntryPaths::callWithSystemLocale<QString>(ArchiveEntryPaths::pathname, entry);
+            if (!include.isEmpty() && !current.contains(includeRegex))
+                continue;
 
             ++files;
         }

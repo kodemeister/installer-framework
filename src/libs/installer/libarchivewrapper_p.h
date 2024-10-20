@@ -54,7 +54,11 @@ public:
 
     QString errorString() const;
 
-    bool extract(const QString &dirPath, const quint64 totalFiles = 0);
+    bool extract(const QString &dirPath,
+                 const QString &include = QString(),
+                 const QString &search = QString(),
+                 const QString &replace = QString(),
+                 const quint64 totalFiles = 0);
     bool create(const QStringList &data);
     QVector<ArchiveEntry> list();
     bool isSupported();

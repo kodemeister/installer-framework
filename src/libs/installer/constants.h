@@ -181,6 +181,7 @@ static const QLatin1String scLogo("Logo");
 static const QLatin1String scBackground("Background");
 static const QLatin1String scPageListPixmap("PageListPixmap");
 static const QLatin1String scAliasDefinitionsFile("AliasDefinitionsFile");
+static const QLatin1String scDataFile("DATAFILE");
 const char scRelocatable[] = "@RELOCATABLE_PATH@";
 
 static const QStringList scMetaElements = {

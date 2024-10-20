@@ -790,12 +790,13 @@ void Component::loadXMLExtractOperations()
     for (auto &operation: std::as_const(m_operationsList)) {
         if (operation.first == scExtract) {
             // Create hash for Extract operations. Operation has a mandatory extract folder as
-            // first argument and optional archive name as second argument.
+            // first argument and optional archive name as second argument followed by the rest
+            // of optional arguments.
             const QStringList &operationArgs = operation.second.toStringList();
-            if (operationArgs.count() == 2) {
+            if (operationArgs.count() >= 2) {
                 const QString archiveName = value(scVersion) + operationArgs.at(1);
                 const QString archivePath = scInstallerPrefixWithTwoArgs.arg(name()).arg(archiveName);
-                m_archivesHash.insert(archivePath, operationArgs.at(0));
+                m_archivesHash.insert(archivePath, QStringList() << operationArgs.at(0) << operationArgs.mid(2));
             } else if (operationArgs.count() == 1) {
                 m_defaultArchivePath = operationArgs.at(0);
             }

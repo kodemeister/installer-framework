@@ -58,7 +58,7 @@
     \endcode
     \note The argument order in component.xml is the same as in scripting, except for
     \c Extract operation where the argument \c archive is optional, and must be defined
-    as the last argument.
+    as the second argument.
 
     \table
         \header
@@ -213,10 +213,19 @@
                 first dash (-) in the filename of the icon with this prefix.
         \row
             \li Extract
-            \li "Extract" \c archive \c targetdirectory
+            \li "Extract" \c archive \c targetdirectory [\c include [\c search [\c replace [\c listFilePath]]]]
             \li Extracts \c archive to \c targetdirectory.
                 Extract operations are called before other operations. Note that in component.xml
-                argument \c archive is optional and thus must be defined as the last parameter.
+                argument \c archive is optional and thus must be defined as the second parameter.
+                Optionally, you can pass regular expression \c include to specify which files should
+                be extracted to the target directory. If you provide regular expression \c search,
+                the operation replaces all occurrences of \c search in file names with string
+                \c replace. This can be useful, e.g., for unpacking the contents of top-level
+                directory or renaming extracted files. If \c listFilePath is specified, the list of
+                extracted files is stored there. Otherwise, it is stored in
+                \c {@TargetDir@/installerResources/<component_name>/<archive_name>.txt}
+                \note If you want to store the list of extracted files in maintenance tool .dat
+                file, pass a special value \e DATAFILE as \c listFilePath parameter.
 
         \row
             \li GlobalConfig

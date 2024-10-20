@@ -131,23 +131,30 @@ QString LibArchiveWrapperPrivate::errorString() const
 }
 
 /*!
-    Extracts the contents of this archive to \a dirPath with
-    an optional precalculated count of \a totalFiles. Returns \c true
-    on success; \c false otherwise.
+    Extracts the contents of this archive to \a dirPath with an optional precalculated count of
+    \a totalFiles.
+    If regular expression \a include is specified, only files that match \a include are extracted.
+    If regular expression \a search is specified, all occurrences of \a search in file names are
+    replaced with string \a replace. Returns \c true on success; \c false otherwise.
 
     If the remote connection is active, the method is called by the server instead,
     with the client starting a new event loop waiting for the extraction to finish.
 */
-bool LibArchiveWrapperPrivate::extract(const QString &dirPath, const quint64 totalFiles)
+bool LibArchiveWrapperPrivate::extract(const QString &dirPath,
+                                       const QString &include,
+                                       const QString &search,
+                                       const QString &replace,
+                                       const quint64 totalFiles)
 {
-    const quint64 total = totalFiles ? totalFiles : m_archive.totalFiles();
+    const quint64 total = totalFiles ? totalFiles : m_archive.totalFiles(include);
     if (connectToServer()) {
         QTimer timer;
         connect(&timer, &QTimer::timeout, this, &LibArchiveWrapperPrivate::processSignals);
         timer.start();
 
         m_lock.lockForWrite();
-        callRemoteMethodDefaultReply(QLatin1String(Protocol::AbstractArchiveExtract), dirPath, total);
+        callRemoteMethodDefaultReply(QLatin1String(Protocol::AbstractArchiveExtract),
+                                     dirPath, include, search, replace, total);
         m_lock.unlock();
         {
             QEventLoop loop;
@@ -157,7 +164,7 @@ bool LibArchiveWrapperPrivate::extract(const QString &dirPath, const quint64 tot
         timer.stop();
         return (workerStatus() == ExtractWorker::Success);
     }
-    return m_archive.extract(dirPath, total);
+    return m_archive.extract(dirPath, include, search, replace, total);
 }
 
 /*!

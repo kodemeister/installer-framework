@@ -244,7 +244,7 @@ private:
     QString validatorCallbackName;
     ComponentPrivate *d;
     QList<QPair<QString, QVariant>> m_operationsList;
-    QHash<QString, QString> m_archivesHash;
+    QHash<QString, QStringList> m_archivesHash;
     QString m_defaultArchivePath;
 };
 

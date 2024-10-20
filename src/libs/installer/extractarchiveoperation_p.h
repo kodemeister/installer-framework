@@ -158,9 +158,18 @@ class ExtractArchiveOperation::Worker : public QObject
     Q_DISABLE_COPY(Worker)
 
 public:
-    Worker(const QString &archivePath, const QString &targetDir, quint64 totalEntries, Callback *callback)
+    Worker(const QString &archivePath,
+           const QString &targetDir,
+           const QString &include,
+           const QString &search,
+           const QString &replace,
+           quint64 totalEntries,
+           Callback *callback)
         : m_archivePath(archivePath)
         , m_targetDir(targetDir)
+        , m_include(include)
+        , m_search(search)
+        , m_replace(replace)
         , m_totalEntries(totalEntries)
         , m_callback(callback)
     {}
@@ -187,7 +196,7 @@ public Q_SLOTS:
             return;
         }
 
-        if (!m_archive->extract(m_targetDir, m_totalEntries)) {
+        if (!m_archive->extract(m_targetDir, m_include, m_search, m_replace, m_totalEntries)) {
             emit finished(false, tr("Error while extracting archive \"%1\": %2").arg(m_archivePath,
                 m_archive->errorString()));
         } else {
@@ -215,6 +224,9 @@ public Q_SLOTS:
 private:
     QString m_archivePath;
     QString m_targetDir;
+    QString m_include;
+    QString m_search;
+    QString m_replace;
     quint64 m_totalEntries;
     QScopedPointer<AbstractArchive> m_archive;
     Callback *m_callback;

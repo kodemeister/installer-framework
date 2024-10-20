@@ -91,7 +91,11 @@ public:
     virtual QString errorString() const;
 
     virtual bool extract(const QString &dirPath) = 0;
-    virtual bool extract(const QString &dirPath, const quint64 totalFiles) = 0;
+    virtual bool extract(const QString &dirPath,
+                         const QString &include,
+                         const QString &search,
+                         const QString &replace,
+                         const quint64 totalFiles) = 0;
     virtual bool create(const QStringList &data) = 0;
     virtual QVector<ArchiveEntry> list() = 0;
     virtual bool isSupported() = 0;

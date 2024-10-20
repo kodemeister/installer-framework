@@ -50,7 +50,7 @@ public:
 
     quint64 sizeHint() override;
 
-    bool readDataFileContents(QString &targetDir, QStringList *resultList);
+    bool readListFileContents(QString &targetDir, QStringList *resultList);
 
 Q_SIGNALS:
     void outputTextChanged(const QString &progress);
@@ -58,7 +58,7 @@ Q_SIGNALS:
 
 private:
     void startUndoProcess(const QStringList &files);
-    void deleteDataFile(const QString &fileName);
+    void deleteListFile(const QString &fileName);
 
     QString generateBackupName(const QString &fn);
     bool prepareForFile(const QString &filename);
@@ -72,7 +72,7 @@ private:
     class Receiver;
 
 private:
-    QString m_relocatedDataFileName;
+    QString m_relocatedListFileName;
     BackupFiles m_backupFiles;
     quint64 m_totalEntries;
 };
