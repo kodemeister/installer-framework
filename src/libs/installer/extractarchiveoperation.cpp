@@ -253,13 +253,28 @@ bool ExtractArchiveOperation::performOperation()
 
     if (listFilePath != scDataFile) {
         QFile file(listFilePath);
-        if (file.open(QIODevice::WriteOnly)) {
+        QIODevice::OpenMode mode = isDefaultListFile ? QIODevice::WriteOnly : QIODevice::WriteOnly | QIODevice::Text;
+        if (file.open(mode)) {
             setDefaultFilePermissions(file.fileName(), DefaultFilePermissions::NonExecutable);
-            QDataStream out(&file);
-            for (int i = 0; i < files.count(); ++i)
-                files[i] = replacePath(files.at(i), installDir, QLatin1String(scRelocatable));
-            if (!files.isEmpty())
-                out << files;
+            if (isDefaultListFile) {
+                QDataStream out(&file);
+                for (int i = 0; i < files.count(); ++i)
+                    files[i] = replacePath(files.at(i), installDir, QLatin1String(scRelocatable));
+                if (!files.isEmpty())
+                    out << files;
+            } else {
+                QTextStream out(&file);
+                QString extractDir = QDir::cleanPath(targetDir) + QLatin1Char('/');
+                for (int i = 0; i < files.count(); ++i) {
+                    QString path = QDir::cleanPath(files.at(i));
+                    // Do not save directories to the list file for compatibility with GHCup.
+                    if (QFileInfo(path).isDir())
+                        continue;
+                    if (path.startsWith(extractDir))
+                        path = path.mid(extractDir.size());
+                    out << QDir::toNativeSeparators(path) << '\n';
+                }
+            }
             setValue(QLatin1String("files"), file.fileName());
             file.close();
         } else {
@@ -417,12 +432,34 @@ bool ExtractArchiveOperation::readListFileContents(QString &targetDir, QStringLi
     m_relocatedListFileName = replacePath(filePath, QLatin1String(scRelocatable), targetDir);
     QFile file(m_relocatedListFileName);
 
-    if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);
-        in >> *resultList;
-        for (int i = 0; i < resultList->count(); ++i)
-            resultList->replace(i, replacePath(resultList->at(i),  QLatin1String(scRelocatable), targetDir));
-
+    bool isDefaultListFile = arguments().value(5).isEmpty();
+    QIODevice::OpenMode mode = isDefaultListFile ? QIODevice::ReadOnly : QIODevice::ReadOnly | QIODevice::Text;
+    if (file.open(mode)) {
+        if (isDefaultListFile) {
+            QDataStream in(&file);
+            in >> *resultList;
+            for (int i = 0; i < resultList->count(); ++i)
+                resultList->replace(i, replacePath(resultList->at(i), QLatin1String(scRelocatable), targetDir));
+        } else {
+            QTextStream in(&file);
+            QString extractDir = QDir::cleanPath(arguments().at(1)) + QLatin1Char('/');
+            QSet<QString> files = { QDir::cleanPath(extractDir) };
+            while (!in.atEnd()) {
+                QString path = QDir::fromNativeSeparators(in.readLine());
+                if (path.isEmpty())
+                    continue;
+                // Add the current file together with all parent directories since they are not
+                // stored in the GHCup list file.
+                if (QDir::isRelativePath(path)) {
+                    for (int i = 0; i <= path.count(QLatin1Char('/')); ++i)
+                        files.insert(extractDir + path.section(QLatin1Char('/'), 0, i));
+                } else {
+                    for (int i = 1; i <= path.count(QLatin1Char('/')); ++i)
+                        files.insert(path.section(QLatin1Char('/'), 0, i));
+                }
+            }
+            *resultList = files.values();
+        }
     } else {
         // We should not be here. Either user has manually deleted the installer related
         // files or same component is installed several times.
